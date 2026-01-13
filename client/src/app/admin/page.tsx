@@ -117,8 +117,29 @@ const [filesToUpload, setFilesToUpload] = useState<FileList | null>(null)
   }, [token])
 
   // Utilidades intenciones
-  const resetForm = () =>
-    setForm({ title: "", patterns: [], responses: [], files: [], faq: false })
+  const resetForm = () => {
+  // 1. Limpiamos el objeto principal del formulario
+  // Incluimos patternsRaw y responsesRaw para que los inputs de texto se vacíen
+  setForm({ 
+    id: undefined, // Importante para que el panel sepa que es una NUEVA intención
+    title: "", 
+    patterns: [], 
+    patternsRaw: "", 
+    responses: [], 
+    responsesRaw: "", 
+    files: [], 
+    faq: false 
+  });
+
+  // 2. Limpiamos los archivos que estaban en espera de ser subidos
+  setFilesToUpload(null);
+
+  // 3. Limpiamos visualmente el selector de archivos (el botón gris de Windows)
+  const fileInput = document.querySelector('input[type="file"]');
+  if (fileInput) {
+    fileInput.value = "";
+  }
+};
 
   const refreshList = async () => {
     if (!token) return
@@ -395,7 +416,7 @@ return (
   <label className="text-sm font-medium">Respuestas (separadas por coma)</label>
   <textarea
     className="w-full border rounded p-2"
-    placeholder="Respuesta 1, Respuesta 2..."
+    placeholder="Respuesta..."
     value={form.responsesRaw}   // mostramos el texto plano
     onChange={(e) =>
       setForm({

@@ -1,4 +1,6 @@
 import express from "express"
+// server/src/routes/intents.js
+import { pool } from "../server.js"
 import multer from "multer"
 import {
   getIntents,
@@ -11,6 +13,7 @@ import {
 import auth from "../middleware/auth.js"
 import path from "path"
 import fs from "fs"
+
 
 const router = express.Router()
 
@@ -100,8 +103,8 @@ router.delete("/:id/files", auth, async (req, res) => {
     const { path: filePath } = req.body
     const intent = await removeFileFromIntent(req.params.id, filePath)
 
-    // Construimos ruta física en public/docs
-    const fullPath = path.join(process.cwd(), "public", filePath.replace("/docs/", "docs/"))
+    const relativePath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    const fullPath = path.join(process.cwd(), "public", relativePath);
     if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath)
 
     res.json({ message: "Archivo eliminado", intent })
@@ -110,5 +113,30 @@ router.delete("/:id/files", auth, async (req, res) => {
     res.status(400).json({ error: "Error al eliminar archivo" })
   }
 })
+
+router.post("/:id/use", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Agregamos un log para ver si la petición llega al servidor
+    console.log("Solicitud de incremento para ID:", id);
+
+    const result = await pool.query(
+      "UPDATE intents SET usage_count = COALESCE(usage_count, 0) + 1 WHERE id = $1 RETURNING usage_count",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Intención no encontrada" });
+    }
+
+    console.log("Nuevo valor para ID " + id + ":", result.rows[0].usage_count);
+    res.json({ success: true, newCount: result.rows[0].usage_count });
+  } catch (err) {
+    console.error("❌ Error en el contador:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 
 export default router

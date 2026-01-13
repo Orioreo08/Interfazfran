@@ -58,3 +58,12 @@ export async function removeFileFromIntent(id, filePath) {
   )
   return result.rows[0]
 }
+
+//Conteo de las intenciones
+export async function incrementIntentUsage(id) {
+  await pool.query(
+    "UPDATE intents SET usage_count = usage_count + 1 WHERE id = $1",
+    [id]
+  );
+}
+

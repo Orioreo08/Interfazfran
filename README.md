@@ -126,3 +126,133 @@ Abre el frontend en http://localhost:3000.
 El frontend consume datos desde http://localhost:3001.
 
 ¡Listo! Con esto puedes levantar todo tu proyecto Themis en un solo comando.
+
+-- ============================================
+-- CREACIÓN DE BASE DE DATOS Y USUARIO
+-- ============================================
+
+CREATE DATABASE themis_chatbot;
+
+CREATE USER themis_user WITH PASSWORD 'cambia_esta_contraseña';
+
+GRANT ALL PRIVILEGES ON DATABASE themis_chatbot TO themis_user;
+
+-- ============================================
+-- CREACIÓN DE TABLAS
+-- ============================================
+
+-- Tabla de intenciones dinámicas
+CREATE TABLE intents (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    patterns TEXT[] DEFAULT '{}',
+    responses TEXT[] DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de archivos asociados a intenciones
+CREATE TABLE intent_files (
+    id SERIAL PRIMARY KEY,
+    intent_id INT REFERENCES intents(id) ON DELETE CASCADE,
+    filename VARCHAR(255) NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de usuarios (para login y admin)
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- PERMISOS SOBRE TABLAS Y SECUENCIAS
+-- ============================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON intents TO themis_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON intent_files TO themis_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON users TO themis_user;
+
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE intents_id_seq TO themis_user;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE intent_files_id_seq TO themis_user;
+GRANT USAGE, SELECT, UPDATE ON SEQUENCE users_id_seq TO themis_user;
+
+.
+
+🖥️ Requisitos en la computadora
+1. Instalar PostgreSQL
+Descargar desde https://www.postgresql.org/download/.
+
+Durante la instalación, anotar:
+
+Usuario administrador (postgres).
+
+Contraseña.
+
+Puerto (por defecto 5432).
+
+2. Instalar Node.js
+Descargar desde https://nodejs.org.
+
+Recomiendo la versión LTS (estable).
+
+3. Instalar Git
+Descargar desde https://git-scm.com/downloads.
+
+Necesario para clonar el repositorio.
+
+Dependencias típicas que deben estar en tu package.json:
+
+Backend (Express + JWT + DB)
+
+express
+
+jsonwebtoken
+
+bcrypt (para hash de contraseñas)
+
+pg (driver de PostgreSQL)
+
+multer (para subir archivos)
+
+cors
+
+dotenv (para variables de entorno)
+
+Frontend (Next.js + React)
+
+next
+
+react
+
+react-dom
+
+============================================
+CREA ARCHIVO .env
+============================================
+
+crear el .env DENTRO de la carpeta server
+/project
+  /client   (Next.js)
+  /server   (Express)
+    server.js
+    .env   👈 aquí
+    postgres.config.js
+
+EJEMPLO DEL CONTENIDO DEL ARCHIVO
+
+PG_USER=(usuario de base de datos normalmente postgrest)
+PG_PASSWORD=(contrasena con la que ingresas en el postgrest,esa misma, igualita)
+PG_HOST=localhost (ni idea, dejalo asi)
+PG_PORT= (puerto donde corre tu base de datos, normalmente 5432 yo trabaje con 5434)
+PG_DATABASE=themis (nombre de la base de datos tal cual: themis )
+JWT_SECRET= (inventate una vaina extra larga)
+
+
+ir a la carpeta postgrestREST
+ir al archivo postgrest.config
+
+jwt-secret == JWR_SECRET
